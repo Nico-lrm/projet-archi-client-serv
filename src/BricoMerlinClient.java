@@ -31,7 +31,7 @@ public class BricoMerlinClient {
     public boolean connecterAuServeur(String serverUrl) {
         try {
             service = (BricoMerlinService) Naming.lookup(serverUrl);
-            System.out.println("Connexion au serveur établie avec succès");
+            System.out.println("Connexion au serveur etablie avec succes");
             return true;
         } catch (Exception e) {
             System.err.println("Erreur lors de la connexion au serveur: " + e.getMessage());
@@ -40,7 +40,7 @@ public class BricoMerlinClient {
     }
 
     /**
-     * Démarrer l'interface utilisateur
+     * Demarrer l'interface utilisateur
      */
     public void demarrer() {
         System.out.println("=== BIENVENUE CHEZ BRICO-MERLIN ===");
@@ -66,7 +66,7 @@ public class BricoMerlinClient {
         System.out.println("1. Consulter le stock d'un article");
         System.out.println("2. Rechercher des articles par famille");
         System.out.println("3. Acheter un article");
-        System.out.println("4. Ajouter du stock (employé)");
+        System.out.println("4. Ajouter du stock (employe)");
         System.out.println("5. Consulter ma facture");
         System.out.println("6. Payer ma facture");
         System.out.println("7. Calculer le chiffre d'affaires (manager)");
@@ -115,7 +115,7 @@ public class BricoMerlinClient {
                 case 0:
                     return false;
                 default:
-                    System.out.println("Choix invalide. Veuillez réessayer.");
+                    System.out.println("Choix invalide. Veuillez reessayer.");
             }
         } catch (RemoteException e) {
             System.err.println("Erreur de communication avec le serveur: " + e.getMessage());
@@ -123,24 +123,24 @@ public class BricoMerlinClient {
         return true;
     }
 
-    // ========== IMPLÉMENTATION DES FONCTIONNALITÉS ==========
+    // ========== IMPLeMENTATION DES FONCTIONNALITeS ==========
 
     /**
      * Consulter le stock d'un article
      */
     private void consulterStock() throws RemoteException {
-        System.out.print("Entrez la référence de l'article: ");
+        System.out.print("Entrez la reference de l'article: ");
         String reference = scanner.nextLine();
 
         Article article = service.consulterStock(reference);
         if (article != null) {
             System.out.println("\n=== INFORMATIONS ARTICLE ===");
-            System.out.println("Référence: " + article.getReference());
+            System.out.println("Reference: " + article.getReference());
             System.out.println("Famille: " + article.getFamille());
-            System.out.println("Prix unitaire: " + String.format("%.2f€", article.getPrixUnitaire()));
-            System.out.println("Stock disponible: " + article.getStockDisponible() + " unités");
+            System.out.println("Prix unitaire: " + String.format("%.2fe", article.getPrixUnitaire()));
+            System.out.println("Stock disponible: " + article.getStockDisponible() + " unites");
         } else {
-            System.out.println("Article non trouvé ou référence invalide.");
+            System.out.println("Article non trouve ou reference invalide.");
         }
     }
 
@@ -148,19 +148,19 @@ public class BricoMerlinClient {
      * Rechercher des articles par famille
      */
     private void rechercherArticles() throws RemoteException {
-        System.out.print("Entrez la famille d'articles recherchée: ");
+        System.out.print("Entrez la famille d'articles recherchee: ");
         String famille = scanner.nextLine();
 
         List<String> references = service.rechercherArticles(famille);
         if (!references.isEmpty()) {
             System.out.println("\n=== ARTICLES DISPONIBLES ===");
             System.out.println("Famille: " + famille);
-            System.out.println("Références en stock:");
+            System.out.println("References en stock:");
             for (String ref : references) {
                 System.out.println("- " + ref);
             }
         } else {
-            System.out.println("Aucun article trouvé pour cette famille ou tous les articles sont en rupture de stock.");
+            System.out.println("Aucun article trouve pour cette famille ou tous les articles sont en rupture de stock.");
         }
     }
 
@@ -168,73 +168,73 @@ public class BricoMerlinClient {
      * Acheter un article
      */
     private void acheterArticle() throws RemoteException {
-        System.out.print("Entrez la référence de l'article à acheter: ");
+        System.out.print("Entrez la reference de l'article a acheter: ");
         String reference = scanner.nextLine();
 
-        // Vérifier d'abord le stock disponible
+        // Verifier d'abord le stock disponible
         Article article = service.consulterStock(reference);
         if (article == null) {
-            System.out.println("Article non trouvé.");
+            System.out.println("Article non trouve.");
             return;
         }
 
-        System.out.println("Article trouvé: " + article.getReference());
-        System.out.println("Prix unitaire: " + String.format("%.2f€", article.getPrixUnitaire()));
-        System.out.println("Stock disponible: " + article.getStockDisponible() + " unités");
+        System.out.println("Article trouve: " + article.getReference());
+        System.out.println("Prix unitaire: " + String.format("%.2fe", article.getPrixUnitaire()));
+        System.out.println("Stock disponible: " + article.getStockDisponible() + " unites");
 
-        System.out.print("Quantité à acheter: ");
+        System.out.print("Quantite a acheter: ");
         try {
             int quantite = Integer.parseInt(scanner.nextLine());
 
             if (quantite <= 0) {
-                System.out.println("Quantité invalide.");
+                System.out.println("Quantite invalide.");
                 return;
             }
 
             if (quantite > article.getStockDisponible()) {
-                System.out.println("Stock insuffisant. Quantité disponible: " + article.getStockDisponible());
+                System.out.println("Stock insuffisant. Quantite disponible: " + article.getStockDisponible());
                 return;
             }
 
             boolean succes = service.acheterArticle(reference, quantite, clientId);
             if (succes) {
                 double sousTotal = quantite * article.getPrixUnitaire();
-                System.out.println("Achat effectué avec succès!");
-                System.out.println("Sous-total: " + String.format("%.2f€", sousTotal));
-                System.out.println("L'article a été ajouté à votre facture.");
+                System.out.println("Achat effectue avec succes!");
+                System.out.println("Sous-total: " + String.format("%.2fe", sousTotal));
+                System.out.println("L'article a ete ajoute a votre facture.");
             } else {
-                System.out.println("Erreur lors de l'achat. Veuillez réessayer.");
+                System.out.println("Erreur lors de l'achat. Veuillez reessayer.");
             }
         } catch (NumberFormatException e) {
-            System.out.println("Quantité invalide.");
+            System.out.println("Quantite invalide.");
         }
     }
 
     /**
-     * Ajouter du stock (fonction employé)
+     * Ajouter du stock (fonction employe)
      */
     private void ajouterStock() throws RemoteException {
-        System.out.print("Entrez la référence du produit: ");
+        System.out.print("Entrez la reference du produit: ");
         String reference = scanner.nextLine();
 
-        System.out.print("Quantité à ajouter: ");
+        System.out.print("Quantite a ajouter: ");
         try {
             int quantite = Integer.parseInt(scanner.nextLine());
 
             if (quantite <= 0) {
-                System.out.println("Quantité invalide.");
+                System.out.println("Quantite invalide.");
                 return;
             }
 
             boolean succes = service.ajouterStock(reference, quantite);
             if (succes) {
-                System.out.println("Stock ajouté avec succès!");
-                System.out.println(quantite + " unités ajoutées pour le produit " + reference);
+                System.out.println("Stock ajoute avec succes!");
+                System.out.println(quantite + " unites ajoutees pour le produit " + reference);
             } else {
-                System.out.println("Erreur lors de l'ajout de stock. Vérifiez la référence du produit.");
+                System.out.println("Erreur lors de l'ajout de stock. Verifiez la reference du produit.");
             }
         } catch (NumberFormatException e) {
-            System.out.println("Quantité invalide.");
+            System.out.println("Quantite invalide.");
         }
     }
 
@@ -247,15 +247,15 @@ public class BricoMerlinClient {
             System.out.println("\n=== VOTRE FACTURE ===");
             System.out.println("Client: " + facture.getClientId());
             System.out.println("Date: " + dateFormat.format(facture.getDateFacturation()));
-            System.out.println("Statut: " + (facture.isPayee() ? "PAYÉE" : "EN ATTENTE"));
+            System.out.println("Statut: " + (facture.isPayee() ? "PAYEE" : "EN ATTENTE"));
 
             if (facture.getModePaiement() != null) {
                 System.out.println("Mode de paiement: " + facture.getModePaiement());
             }
 
-            System.out.println("\n--- DÉTAIL DES ACHATS ---");
+            System.out.println("\n--- DETAIL DES ACHATS ---");
             for (LigneFacture ligne : facture.getLignesFacture()) {
-                System.out.printf("%-15s | Qté: %3d | Prix: %6.2f€ | Sous-total: %8.2f€%n",
+                System.out.printf("%-15s | Qte: %3d | Prix: %6.2fe | Sous-total: %8.2fe%n",
                         ligne.getReferenceArticle(),
                         ligne.getQuantite(),
                         ligne.getPrixUnitaire(),
@@ -263,10 +263,10 @@ public class BricoMerlinClient {
             }
 
             System.out.println("----------------------------------------");
-            System.out.printf("TOTAL: %.2f€%n", facture.getMontantTotal());
+            System.out.printf("TOTAL: %.2fe%n", facture.getMontantTotal());
 
             if (!facture.isPayee()) {
-                System.out.println("\n⚠️  Cette facture n'est pas encore payée.");
+                System.out.println("\n⚠Cette facture n'est pas encore payee.");
             }
         } else {
             System.out.println("Aucune facture en cours pour ce client.");
@@ -277,7 +277,7 @@ public class BricoMerlinClient {
      * Payer la facture du client
      */
     private void payerFacture() throws RemoteException {
-        // Vérifier d'abord s'il y a une facture à payer
+        // Verifier d'abord s'il y a une facture a payer
         Facture facture = service.consulterFacture(clientId);
         if (facture == null) {
             System.out.println("Aucune facture en attente de paiement.");
@@ -285,15 +285,15 @@ public class BricoMerlinClient {
         }
 
         if (facture.isPayee()) {
-            System.out.println("Votre facture est déjà payée.");
+            System.out.println("Votre facture est deja payee.");
             return;
         }
 
-        System.out.printf("Montant à payer: %.2f€%n", facture.getMontantTotal());
+        System.out.printf("Montant a payer: %.2fe%n", facture.getMontantTotal());
         System.out.println("\nModes de paiement disponibles:");
         System.out.println("1. Carte bancaire");
-        System.out.println("2. Espèces");
-        System.out.println("3. Chèque");
+        System.out.println("2. Especes");
+        System.out.println("3. Cheque");
         System.out.println("4. Virement");
         System.out.print("Choisissez votre mode de paiement (1-4): ");
 
@@ -302,8 +302,8 @@ public class BricoMerlinClient {
             int choixPaiement = Integer.parseInt(scanner.nextLine());
             switch (choixPaiement) {
                 case 1: modePaiement = "Carte bancaire"; break;
-                case 2: modePaiement = "Espèces"; break;
-                case 3: modePaiement = "Chèque"; break;
+                case 2: modePaiement = "Especes"; break;
+                case 3: modePaiement = "Cheque"; break;
                 case 4: modePaiement = "Virement"; break;
                 default:
                     System.out.println("Mode de paiement invalide.");
@@ -320,15 +320,15 @@ public class BricoMerlinClient {
         if (confirmation.equalsIgnoreCase("o") || confirmation.equalsIgnoreCase("oui")) {
             boolean succes = service.payerFacture(clientId, modePaiement);
             if (succes) {
-                System.out.println("✅ Paiement effectué avec succès!");
+                System.out.println("Paiement effectue avec succes!");
                 System.out.println("Mode de paiement: " + modePaiement);
-                System.out.printf("Montant payé: %.2f€%n", facture.getMontantTotal());
+                System.out.printf("Montant paye: %.2fe%n", facture.getMontantTotal());
                 System.out.println("Merci pour votre achat!");
             } else {
-                System.out.println("❌ Erreur lors du paiement. Veuillez réessayer.");
+                System.out.println("Erreur lors du paiement. Veuillez reessayer.");
             }
         } else {
-            System.out.println("Paiement annulé.");
+            System.out.println("Paiement annule.");
         }
     }
 
@@ -348,22 +348,22 @@ public class BricoMerlinClient {
             System.out.printf("Chiffre d'affaires: %.2f€%n", chiffreAffaires);
 
             if (chiffreAffaires == 0) {
-                System.out.println("Aucune vente enregistrée pour cette date.");
+                System.out.println("Aucune vente enregistree pour cette date.");
             }
         } catch (ParseException e) {
             System.out.println("Format de date invalide. Utilisez le format DD/MM/YYYY.");
         }
     }
 
-    // ========== MÉTHODE MAIN ==========
+    // ========== MeTHODE MAIN ==========
 
     public static void main(String[] args) {
         BricoMerlinClient client = new BricoMerlinClient();
 
-        // URL du serveur par défaut
+        // URL du serveur par defaut
         String serverUrl = "//localhost/BricoMerlinService";
 
-        // Permettre de spécifier l'URL du serveur en paramètre
+        // Permettre de specifier l'URL du serveur en parametre
         if (args.length > 0) {
             serverUrl = args[0];
         }
@@ -374,7 +374,7 @@ public class BricoMerlinClient {
             client.demarrer();
         } else {
             System.err.println("Impossible de se connecter au serveur.");
-            System.err.println("Vérifiez que le serveur est démarré et accessible.");
+            System.err.println("Verifiez que le serveur est demarre et accessible.");
             System.exit(1);
         }
     }

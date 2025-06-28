@@ -7,15 +7,15 @@ import java.util.*;
 import java.util.Date;
 
 /**
- * Implémentation du serveur Brico-Merlin
- * Gère les données en base MySQL et traite les requêtes des clients
+ * Implementation du serveur Brico-Merlin
+ * Gere les donnees en base MySQL et traite les requêtes des clients
  */
 public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerlinService {
 
-    // Configuration de la base de données
+    // Configuration de la base de donnees
     private static final String DB_URL = "jdbc:mysql://localhost:3306/bricomerlin";
     private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "password";
+    private static final String DB_PASSWORD = "";
 
     private Connection connection;
 
@@ -25,17 +25,17 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
     public BricoMerlinServer() throws RemoteException {
         super();
         try {
-            // Initialisation de la connexion à la base de données
+            // Initialisation de la connexion a la base de donnees
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-            System.out.println("Connexion à la base de données établie");
+            System.out.println("Connexion a la base de donnees etablie");
         } catch (Exception e) {
-            System.err.println("Erreur lors de la connexion à la base de données: " + e.getMessage());
-            throw new RemoteException("Impossible de se connecter à la base de données", e);
+            System.err.println("Erreur lors de la connexion a la base de donnees: " + e.getMessage());
+            throw new RemoteException("Impossible de se connecter a la base de donnees", e);
         }
     }
 
-    // ========== IMPLÉMENTATION DES MÉTHODES DE GESTION DU STOCK ==========
+    // ========== IMPLeMENTATION DES MeTHODES DE GESTION DU STOCK ==========
 
     @Override
     public Article consulterStock(String reference) throws RemoteException {
@@ -55,7 +55,7 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
             return null;
         } catch (SQLException e) {
             System.err.println("Erreur lors de la consultation du stock: " + e.getMessage());
-            throw new RemoteException("Erreur de base de données", e);
+            throw new RemoteException("Erreur de base de donnees", e);
         }
     }
 
@@ -73,7 +73,7 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
             }
         } catch (SQLException e) {
             System.err.println("Erreur lors de la recherche d'articles: " + e.getMessage());
-            throw new RemoteException("Erreur de base de données", e);
+            throw new RemoteException("Erreur de base de donnees", e);
         }
 
         return references;
@@ -84,14 +84,14 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
         try {
             connection.setAutoCommit(false);
 
-            // Vérifier le stock disponible
+            // Verifier le stock disponible
             Article article = consulterStock(reference);
             if (article == null || article.getStockDisponible() < quantite) {
                 connection.rollback();
                 return false;
             }
 
-            // Mettre à jour le stock
+            // Mettre a jour le stock
             String updateStock = "UPDATE articles SET stock_disponible = stock_disponible - ? WHERE reference = ?";
             try (PreparedStatement stmt = connection.prepareStatement(updateStock)) {
                 stmt.setInt(1, quantite);
@@ -99,11 +99,11 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
                 stmt.executeUpdate();
             }
 
-            // Ajouter à la facture du client
+            // Ajouter a la facture du client
             ajouterLigneFacture(clientId, reference, quantite, article.getPrixUnitaire());
 
             connection.commit();
-            System.out.println("Achat effectué: " + quantite + " x " + reference + " pour client " + clientId);
+            System.out.println("Achat effectue: " + quantite + " x " + reference + " pour client " + clientId);
             return true;
 
         } catch (SQLException e) {
@@ -133,17 +133,17 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
             int rowsAffected = stmt.executeUpdate();
 
             if (rowsAffected > 0) {
-                System.out.println("Stock ajouté: " + quantite + " unités pour " + reference);
+                System.out.println("Stock ajoute: " + quantite + " unites pour " + reference);
                 return true;
             }
             return false;
         } catch (SQLException e) {
             System.err.println("Erreur lors de l'ajout de stock: " + e.getMessage());
-            throw new RemoteException("Erreur de base de données", e);
+            throw new RemoteException("Erreur de base de donnees", e);
         }
     }
 
-    // ========== IMPLÉMENTATION DES MÉTHODES DE GESTION DES FACTURES ==========
+    // ========== IMPLeMENTATION DES MeTHODES DE GESTION DES FACTURES ==========
 
     @Override
     public Facture consulterFacture(String clientId) throws RemoteException {
@@ -159,7 +159,7 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
                 double montantTotal = rsFacture.getDouble("montant_total");
                 Date dateFacturation = rsFacture.getTimestamp("date_facturation");
 
-                // Récupérer les lignes de facture
+                // Recuperer les lignes de facture
                 List<LigneFacture> lignes = new ArrayList<>();
                 try (PreparedStatement stmtLignes = connection.prepareStatement(queryLignes)) {
                     stmtLignes.setInt(1, factureId);
@@ -179,7 +179,7 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
             return null;
         } catch (SQLException e) {
             System.err.println("Erreur lors de la consultation de facture: " + e.getMessage());
-            throw new RemoteException("Erreur de base de données", e);
+            throw new RemoteException("Erreur de base de donnees", e);
         }
     }
 
@@ -193,13 +193,13 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
             int rowsAffected = stmt.executeUpdate();
 
             if (rowsAffected > 0) {
-                System.out.println("Facture payée pour client " + clientId + " (mode: " + modePaiement + ")");
+                System.out.println("Facture payee pour client " + clientId + " (mode: " + modePaiement + ")");
                 return true;
             }
             return false;
         } catch (SQLException e) {
             System.err.println("Erreur lors du paiement: " + e.getMessage());
-            throw new RemoteException("Erreur de base de données", e);
+            throw new RemoteException("Erreur de base de donnees", e);
         }
     }
 
@@ -217,17 +217,17 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
             return 0.0;
         } catch (SQLException e) {
             System.err.println("Erreur lors du calcul du chiffre d'affaires: " + e.getMessage());
-            throw new RemoteException("Erreur de base de données", e);
+            throw new RemoteException("Erreur de base de donnees", e);
         }
     }
 
-    // ========== MÉTHODES UTILITAIRES ==========
+    // ========== MeTHODES UTILITAIRES ==========
 
     /**
-     * Ajouter une ligne à la facture d'un client
+     * Ajouter une ligne a la facture d'un client
      */
     private void ajouterLigneFacture(String clientId, String reference, int quantite, double prixUnitaire) throws SQLException {
-        // Récupérer ou créer la facture du client
+        // Recuperer ou creer la facture du client
         int factureId = obtenirOuCreerFacture(clientId);
 
         // Ajouter la ligne de facture
@@ -240,7 +240,7 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
             stmt.executeUpdate();
         }
 
-        // Mettre à jour le montant total de la facture
+        // Mettre a jour le montant total de la facture
         String updateMontant = "UPDATE factures SET montant_total = (SELECT SUM(quantite * prix_unitaire) FROM lignes_facture WHERE facture_id = ?) WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(updateMontant)) {
             stmt.setInt(1, factureId);
@@ -250,7 +250,7 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
     }
 
     /**
-     * Obtenir l'ID de la facture courante du client ou en créer une nouvelle
+     * Obtenir l'ID de la facture courante du client ou en creer une nouvelle
      */
     private int obtenirOuCreerFacture(String clientId) throws SQLException {
         String queryExistante = "SELECT id FROM factures WHERE client_id = ? AND payee = false";
@@ -263,7 +263,7 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
             }
         }
 
-        // Créer une nouvelle facture
+        // Creer une nouvelle facture
         String insertFacture = "INSERT INTO factures (client_id, montant_total, date_facturation, payee) VALUES (?, 0, NOW(), false)";
         try (PreparedStatement stmt = connection.prepareStatement(insertFacture, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, clientId);
@@ -275,26 +275,26 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
             }
         }
 
-        throw new SQLException("Impossible de créer une nouvelle facture");
+        throw new SQLException("Impossible de creer une nouvelle facture");
     }
 
-    // ========== MÉTHODE MAIN ==========
+    // ========== MeTHODE MAIN ==========
 
     public static void main(String[] args) {
         try {
-            // Démarrer le registre RMI
+            // Demarrer le registre RMI
             LocateRegistry.createRegistry(1099);
-            System.out.println("Registre RMI démarré sur le port 1099");
+            System.out.println("Registre RMI demarre sur le port 1099");
 
-            // Créer et enregistrer le serveur
+            // Creer et enregistrer le serveur
             BricoMerlinServer server = new BricoMerlinServer();
             Naming.rebind("//localhost/BricoMerlinService", server);
 
-            System.out.println("Serveur Brico-Merlin démarré et prêt à recevoir des connexions");
+            System.out.println("Serveur Brico-Merlin demarre et prêt a recevoir des connexions");
             System.out.println("URL du service: //localhost/BricoMerlinService");
 
         } catch (Exception e) {
-            System.err.println("Erreur lors du démarrage du serveur: " + e.getMessage());
+            System.err.println("Erreur lors du demarrage du serveur: " + e.getMessage());
             e.printStackTrace();
         }
     }
