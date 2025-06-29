@@ -6,28 +6,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
-/**
- * Client Brico-Merlin
- * Interface utilisateur pour interagir avec le serveur via RMI
- */
 public class BricoMerlinClient {
 
     private BricoMerlinService service;
-    private Scanner scanner;
+    private final Scanner scanner;
     private String clientId;
-    private SimpleDateFormat dateFormat;
+    private final SimpleDateFormat dateFormat;
 
-    /**
-     * Constructeur du client
-     */
     public BricoMerlinClient() {
         this.scanner = new Scanner(System.in);
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     }
 
-    /**
-     * Connexion au serveur RMI
-     */
     public boolean connecterAuServeur(String serverUrl) {
         try {
             service = (BricoMerlinService) Naming.lookup(serverUrl);
@@ -39,9 +29,8 @@ public class BricoMerlinClient {
         }
     }
 
-    /**
-     * Demarrer l'interface utilisateur
-     */
+    // Menu
+
     public void demarrer() {
         System.out.println("=== BIENVENUE CHEZ BRICO-MERLIN ===");
         System.out.print("Entrez votre identifiant client: ");
@@ -58,9 +47,6 @@ public class BricoMerlinClient {
         scanner.close();
     }
 
-    /**
-     * Afficher le menu principal
-     */
     private void afficherMenu() {
         System.out.println("\n=== MENU PRINCIPAL ===");
         System.out.println("1. Consulter le stock d'un article");
@@ -74,9 +60,6 @@ public class BricoMerlinClient {
         System.out.print("Votre choix: ");
     }
 
-    /**
-     * Lire le choix de l'utilisateur
-     */
     private int lireChoix() {
         try {
             return Integer.parseInt(scanner.nextLine());
@@ -85,9 +68,6 @@ public class BricoMerlinClient {
         }
     }
 
-    /**
-     * Traiter le choix de l'utilisateur
-     */
     private boolean traiterChoix(int choix) {
         try {
             switch (choix) {
@@ -123,15 +103,11 @@ public class BricoMerlinClient {
         return true;
     }
 
-    // ========== IMPLeMENTATION DES FONCTIONNALITeS ==========
+    // Actions
 
-    /**
-     * Consulter le stock d'un article
-     */
     private void consulterStock() throws RemoteException {
         System.out.print("Entrez la reference de l'article: ");
         String reference = scanner.nextLine();
-
         Article article = service.consulterStock(reference);
         if (article != null) {
             System.out.println("\n=== INFORMATIONS ARTICLE ===");
@@ -144,13 +120,9 @@ public class BricoMerlinClient {
         }
     }
 
-    /**
-     * Rechercher des articles par famille
-     */
     private void rechercherArticles() throws RemoteException {
         System.out.print("Entrez la famille d'articles recherchee: ");
         String famille = scanner.nextLine();
-
         List<String> references = service.rechercherArticles(famille);
         if (!references.isEmpty()) {
             System.out.println("\n=== ARTICLES DISPONIBLES ===");
@@ -165,8 +137,8 @@ public class BricoMerlinClient {
     }
 
     /**
-     * Acheter un article
-     */
+     * Ajoute un article a la facture a régler
+    */
     private void acheterArticle() throws RemoteException {
         System.out.print("Entrez la reference de l'article a acheter: ");
         String reference = scanner.nextLine();
@@ -211,21 +183,18 @@ public class BricoMerlinClient {
     }
 
     /**
-     * Ajouter du stock (fonction employe)
+     * Ajouter du stock sur un produit existant (pas de création de produit)
      */
     private void ajouterStock() throws RemoteException {
         System.out.print("Entrez la reference du produit: ");
         String reference = scanner.nextLine();
-
         System.out.print("Quantite a ajouter: ");
         try {
             int quantite = Integer.parseInt(scanner.nextLine());
-
             if (quantite <= 0) {
                 System.out.println("Quantite invalide.");
                 return;
             }
-
             boolean succes = service.ajouterStock(reference, quantite);
             if (succes) {
                 System.out.println("Stock ajoute avec succes!");
@@ -239,7 +208,7 @@ public class BricoMerlinClient {
     }
 
     /**
-     * Consulter la facture du client
+     * Consulter sa facture non payee
      */
     private void consulterFacture() throws RemoteException {
         Facture facture = service.consulterFacture(clientId);
@@ -274,10 +243,9 @@ public class BricoMerlinClient {
     }
 
     /**
-     * Payer la facture du client
-     */
+     * Payer sa facture
+    */
     private void payerFacture() throws RemoteException {
-        // Verifier d'abord s'il y a une facture a payer
         Facture facture = service.consulterFacture(clientId);
         if (facture == null) {
             System.out.println("Aucune facture en attente de paiement.");
@@ -317,7 +285,7 @@ public class BricoMerlinClient {
         System.out.print("Confirmer le paiement? (o/n): ");
         String confirmation = scanner.nextLine();
 
-        if (confirmation.equalsIgnoreCase("o") || confirmation.equalsIgnoreCase("oui")) {
+        if (confirmation.equalsIgnoreCase("o") || confirmation.equalsIgnoreCase("O")) {
             boolean succes = service.payerFacture(clientId, modePaiement);
             if (succes) {
                 System.out.println("Paiement effectue avec succes!");
@@ -333,7 +301,7 @@ public class BricoMerlinClient {
     }
 
     /**
-     * Calculer le chiffre d'affaires (fonction manager)
+     * Calculer le chiffre d'affaires d'une journée
      */
     private void calculerChiffreAffaires() throws RemoteException {
         System.out.print("Entrez la date (format DD/MM/YYYY): ");
@@ -355,21 +323,12 @@ public class BricoMerlinClient {
         }
     }
 
-    // ========== MeTHODE MAIN ==========
+    // Main
 
     public static void main(String[] args) {
         BricoMerlinClient client = new BricoMerlinClient();
-
-        // URL du serveur par defaut
         String serverUrl = "//localhost/BricoMerlinService";
-
-        // Permettre de specifier l'URL du serveur en parametre
-        if (args.length > 0) {
-            serverUrl = args[0];
-        }
-
         System.out.println("Tentative de connexion au serveur: " + serverUrl);
-
         if (client.connecterAuServeur(serverUrl)) {
             client.demarrer();
         } else {

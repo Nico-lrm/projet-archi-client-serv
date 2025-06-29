@@ -1,10 +1,7 @@
-/**
- * Classe représentant une ligne de facture
- */
 public class LigneFacture implements java.io.Serializable {
-    private String referenceArticle;
-    private int quantite;
-    private double prixUnitaire;
+    private final String referenceArticle;
+    private final int quantite;
+    private final double prixUnitaire;
 
     public LigneFacture(String referenceArticle, int quantite, double prixUnitaire) {
         this.referenceArticle = referenceArticle;
@@ -12,23 +9,16 @@ public class LigneFacture implements java.io.Serializable {
         this.prixUnitaire = prixUnitaire;
     }
 
-    // Getters et setters
+    // Getters
     public String getReferenceArticle() { return referenceArticle; }
-    public void setReferenceArticle(String referenceArticle) { this.referenceArticle = referenceArticle; }
-
     public int getQuantite() { return quantite; }
-    public void setQuantite(int quantite) { this.quantite = quantite; }
-
     public double getPrixUnitaire() { return prixUnitaire; }
-    public void setPrixUnitaire(double prixUnitaire) { this.prixUnitaire = prixUnitaire; }
-
     public double getSousTotal() {
         return quantite * prixUnitaire;
     }
 
     @Override
     public String toString() {
-        return String.format("LigneFacture{ref='%s', qté=%d, prix=%.2f€, sous-total=%.2f€}",
-                referenceArticle, quantite, prixUnitaire, getSousTotal());
+        return String.format("LigneFacture{ref='%s', qte=%d, prix=%.2fe, sous-total=%.2fe}", referenceArticle, quantite, prixUnitaire, getSousTotal());
     }
 }

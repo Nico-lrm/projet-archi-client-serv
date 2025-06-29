@@ -1,45 +1,46 @@
 import java.util.Date;
-import java.util.List; /**
- * Classe représentant une facture
- */
+import java.util.List;
+
 public class Facture implements java.io.Serializable {
-    private String clientId;
-    private double montantTotal;
-    private List<LigneFacture> lignesFacture;
-    private String modePaiement;
-    private Date dateFacturation;
-    private boolean payee;
+    private final String clientId;
+    private final double montantTotal;
+    private final List<LigneFacture> lignesFacture;
+    private final String modePaiement;
+    private final Date dateFacturation;
+    private final Date datePaiement;
+    private final boolean payee;
+
+    public Facture(String clientId, double montantTotal, List<LigneFacture> lignesFacture, Date dateFacturation, Date datePaiement, boolean payee, String modePaiement) {
+        this.clientId = clientId;
+        this.montantTotal = montantTotal;
+        this.lignesFacture = lignesFacture;
+        this.dateFacturation = dateFacturation;
+        this.datePaiement = datePaiement;
+        this.payee = payee;
+        this.modePaiement = modePaiement;
+    }
 
     public Facture(String clientId, double montantTotal, List<LigneFacture> lignesFacture, Date dateFacturation) {
         this.clientId = clientId;
         this.montantTotal = montantTotal;
         this.lignesFacture = lignesFacture;
         this.dateFacturation = dateFacturation;
+        this.datePaiement = null;
         this.payee = false;
+        this.modePaiement = null;
     }
 
-    // Getters et setters
+    // Getters
     public String getClientId() { return clientId; }
-    public void setClientId(String clientId) { this.clientId = clientId; }
-
     public double getMontantTotal() { return montantTotal; }
-    public void setMontantTotal(double montantTotal) { this.montantTotal = montantTotal; }
-
     public List<LigneFacture> getLignesFacture() { return lignesFacture; }
-    public void setLignesFacture(List<LigneFacture> lignesFacture) { this.lignesFacture = lignesFacture; }
-
     public String getModePaiement() { return modePaiement; }
-    public void setModePaiement(String modePaiement) { this.modePaiement = modePaiement; }
-
     public Date getDateFacturation() { return dateFacturation; }
-    public void setDateFacturation(Date dateFacturation) { this.dateFacturation = dateFacturation; }
-
+    public Date getDatePaiement() { return datePaiement; }
     public boolean isPayee() { return payee; }
-    public void setPayee(boolean payee) { this.payee = payee; }
 
     @Override
     public String toString() {
-        return String.format("Facture{client='%s', total=%.2f€, payée=%s, date=%s}",
-                clientId, montantTotal, payee ? "Oui" : "Non", dateFacturation);
+        return String.format("Facture{client='%s', total=%.2fe, payée=%s, date=%s}", clientId, montantTotal, payee ? "Oui" : "Non", dateFacturation);
     }
 }

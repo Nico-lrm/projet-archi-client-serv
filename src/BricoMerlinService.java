@@ -42,7 +42,7 @@ public interface BricoMerlinService extends Remote {
     // ========== GESTION DES FACTURES ==========
 
     /**
-     * Consulter la facture d'un client
+     * Consulter sa facture non payee
      * @param clientId Identifiant du client
      * @return La facture du client (null si inexistante)
      */

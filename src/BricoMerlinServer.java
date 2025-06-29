@@ -7,27 +7,25 @@ import java.util.*;
 import java.util.Date;
 
 /**
- * Implementation du serveur Brico-Merlin
  * Gere les donnees en base MySQL et traite les requêtes des clients
- */
+ * Initialise le service RMI (plutot que de devoir lancer le service + serveur)
+*/
 public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerlinService {
 
     // Configuration de la base de donnees
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/bricomerlin";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/";
+    private static final String DB_NAME = "bricomerlin";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "";
+    private final Connection connection;
 
-    private Connection connection;
-
-    /**
-     * Constructeur du serveur
-     */
     public BricoMerlinServer() throws RemoteException {
         super();
         try {
-            // Initialisation de la connexion a la base de donnees
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            creerBaseDeDonnees();
+            connection = DriverManager.getConnection(DB_URL + DB_NAME, DB_USER, DB_PASSWORD);
+            initialiserBaseDeDonnees();
             System.out.println("Connexion a la base de donnees etablie");
         } catch (Exception e) {
             System.err.println("Erreur lors de la connexion a la base de donnees: " + e.getMessage());
@@ -35,7 +33,7 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
         }
     }
 
-    // ========== IMPLeMENTATION DES MeTHODES DE GESTION DU STOCK ==========
+    // Service
 
     @Override
     public Article consulterStock(String reference) throws RemoteException {
@@ -143,8 +141,6 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
         }
     }
 
-    // ========== IMPLeMENTATION DES MeTHODES DE GESTION DES FACTURES ==========
-
     @Override
     public Facture consulterFacture(String clientId) throws RemoteException {
         String queryFacture = "SELECT * FROM factures WHERE client_id = ? AND payee = false";
@@ -186,7 +182,6 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
     @Override
     public boolean payerFacture(String clientId, String modePaiement) throws RemoteException {
         String query = "UPDATE factures SET payee = true, mode_paiement = ?, date_paiement = NOW() WHERE client_id = ? AND payee = false";
-
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, modePaiement);
             stmt.setString(2, clientId);
@@ -221,11 +216,8 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
         }
     }
 
-    // ========== MeTHODES UTILITAIRES ==========
+    // Utilitaire
 
-    /**
-     * Ajouter une ligne a la facture d'un client
-     */
     private void ajouterLigneFacture(String clientId, String reference, int quantite, double prixUnitaire) throws SQLException {
         // Recuperer ou creer la facture du client
         int factureId = obtenirOuCreerFacture(clientId);
@@ -249,9 +241,6 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
         }
     }
 
-    /**
-     * Obtenir l'ID de la facture courante du client ou en creer une nouvelle
-     */
     private int obtenirOuCreerFacture(String clientId) throws SQLException {
         String queryExistante = "SELECT id FROM factures WHERE client_id = ? AND payee = false";
         try (PreparedStatement stmt = connection.prepareStatement(queryExistante)) {
@@ -278,7 +267,98 @@ public class BricoMerlinServer extends UnicastRemoteObject implements BricoMerli
         throw new SQLException("Impossible de creer une nouvelle facture");
     }
 
-    // ========== MeTHODE MAIN ==========
+    // BDD
+
+    private void creerBaseDeDonnees() throws SQLException {
+        try (Connection tempConnection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement stmt = tempConnection.createStatement()) {
+
+            // Créer la base de données si elle n'existe pas
+            String createDatabase = "CREATE DATABASE IF NOT EXISTS " + DB_NAME +
+                    " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
+            stmt.execute(createDatabase);
+
+            System.out.println("Base de donnees '" + DB_NAME + "' verifiee/creee avec succes");
+        }
+    }
+
+    private void initialiserBaseDeDonnees() {
+        try {
+            Statement stmt = connection.createStatement();
+
+            // Création de la table articles
+            String createArticlesTable = """
+                CREATE TABLE IF NOT EXISTS articles (
+                    reference VARCHAR(50) PRIMARY KEY,
+                    famille VARCHAR(100) NOT NULL,
+                    prix_unitaire DECIMAL(10,2) NOT NULL,
+                    stock_disponible INT NOT NULL DEFAULT 0
+                )
+            """;
+
+            // Création de la table factures
+            String createFacturesTable = """
+                CREATE TABLE IF NOT EXISTS factures (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    client_id VARCHAR(100) NOT NULL,
+                    montant_total DECIMAL(10,2) NOT NULL,
+                    mode_paiement VARCHAR(50),
+                    date_facturation DATETIME NOT NULL,
+                    date_paiement DATETIME DEFAULT NULL,
+                    payee BOOLEAN DEFAULT FALSE
+                )
+            """;
+
+            // Création de la table lignes_facture
+            String createLignesFactureTable = """
+                CREATE TABLE IF NOT EXISTS lignes_facture (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    facture_id INT,
+                    reference_article VARCHAR(50),
+                    quantite INT NOT NULL,
+                    prix_unitaire DECIMAL(10,2) NOT NULL,
+                    FOREIGN KEY (facture_id) REFERENCES factures(id),
+                    FOREIGN KEY (reference_article) REFERENCES articles(reference)
+                )
+            """;
+
+            // Exécuter les créations de tables
+            stmt.execute(createArticlesTable);
+            stmt.execute(createFacturesTable);
+            stmt.execute(createLignesFactureTable);
+
+            System.out.println("Tables creees avec succes !");
+
+            insertionDonneesTest(stmt);
+
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de l'initialisation : " + e.getMessage());
+        }
+    }
+
+    private void insertionDonneesTest(Statement stmt) throws SQLException {
+        // Vérifier si des données existent déjà
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM articles");
+        rs.next();
+        int count = rs.getInt(1);
+        if (count == 0) {
+            System.out.println("Insertion de donnees de test...");
+            String[] insertArticles = {
+                    "INSERT INTO articles VALUES ('VIS001', 'Visserie', 0.15, 1000)",
+                    "INSERT INTO articles VALUES ('VIS002', 'Visserie', 0.25, 500)",
+                    "INSERT INTO articles VALUES ('OUT001', 'Outillage', 25.90, 20)",
+                    "INSERT INTO articles VALUES ('OUT002', 'Outillage', 45.50, 15)",
+                    "INSERT INTO articles VALUES ('PEI001', 'Peinture', 12.99, 50)",
+                    "INSERT INTO articles VALUES ('PEI002', 'Peinture', 18.75, 30)"
+            };
+            for (String sql : insertArticles) {
+                stmt.execute(sql);
+            }
+            System.out.println("Donnees de test inserees !");
+        }
+    }
+
+    // Main
 
     public static void main(String[] args) {
         try {
